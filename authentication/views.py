@@ -1,5 +1,7 @@
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
 from django.http import HttpResponse
+from django.template import RequestContext, loader
 
 def index(request):
-    return HttpResponse("Hello, world!")
+    template = loader.get_template('authentication/test1.html')
+    return render_to_response('authentication/test1.html')

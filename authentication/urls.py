@@ -3,5 +3,5 @@ from authentication import views
 
 
 urlpatterns = patterns('',
-    url(r'^$', views.contact, name='index')
+    url(r'^$', views.authorization, name='index')
 )

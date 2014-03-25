@@ -27,18 +27,28 @@ def authorization(request):
                 user = authenticate(username=username, password=password)
                 if user is not None:
                     if user.is_active:
-                        print "You provided a correct username and password!"
+                        #print "You provided a correct username and password!"
                         login(request,user)
-                        return HttpResponseRedirect('/')
+                        print "---------------------Авторизован---------------------------"
                     else:
                         print "Your account has been disabled!"
-                        return HttpResponseRedirect('/2')
+                        print "---------------------Аккаунт отключен---------------------------"
                 else:
                     print "Your username and password were incorrect."
-                    return HttpResponseRedirect('/0 ')
+                    print "---------------------Логин или пароль неккоректны---------------------------"
                  # Redirect after POST
         else:
             form = authorizationForm() # An unbound form
         return render(request, 'authentication/test1.html', {'form': form,})
     else:
         return HttpResponseRedirect('/')
+
+def registration(request):
+    if request.user.is_anonymous():
+        print "---------------------Не авторизован---------------------------"
+        return HttpResponseRedirect('/authentication/')
+    else:
+        print "---------------------Авторизован---------------------------"
+        t = loader.get_template('main/index.html')
+        c = RequestContext(request)
+        return HttpResponse(t.render(c))

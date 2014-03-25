@@ -19,6 +19,24 @@ class registrationForm(forms.Form):
     password = forms.CharField(label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
     email = forms.CharField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
 
+class userControlForm(forms.Form):
+    userlist = User.objects.all()
+    userFormList = []
+    for i in userlist:
+        userInputList = []
+        username = forms.CharField(label=u'Логин',widget=forms.TextInput(attrs ={'size': 30, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
+        password = forms.CharField(label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
+        email = forms.CharField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
+
+        
+    
+
+def username_check(username):
+    if User.objects.filter(username=username).count():
+        return True
+    else:
+        return False
+
 
 def authorization(request):
     if request.user.is_anonymous():
@@ -62,13 +80,25 @@ def registration(request):
                 password = form.cleaned_data['password']
                 email = form.cleaned_data['email']
 
-                user = User.objects.create_user(username, email, password)
-                user.save()                
-                print "---------------------Пользователь создан---------------------------"
-                return render(request, 'authentication/congratulationRegistration.html')
-                time.sleep( 5 )
-                return HttpResponseRedirect('/')
-                print "!!!!!!!!!!!!!!!!!!!!!!!5!!!!!!!!!!!!!!!!!!!!!!"
+                if username_check(username):
+                    print "-------------Пользователь с такми именем уже существует---------------"
+                    form = registrationForm() # An unbound form
+                    return render(request, 'authentication/registration.html', {'form': form,})
+                else:
+                    return username  
+                    user = User.objects.create_user(username, email, password)
+                    user.save()              
+                    print "---------------------Пользователь создан---------------------------"
+                    return render(request, 'authentication/congratulationRegistration.html')
+                    time.sleep( 5 )
+                    return HttpResponseRedirect('/')
+                    print "!!!!!!!!!!!!!!!!!!!!!!!5!!!!!!!!!!!!!!!!!!!!!!"
         else:
             form = registrationForm() # An unbound form
             return render(request, 'authentication/registration.html', {'form': form,})
+
+def userControl(request):
+    arrayUsernames =  User.objects.all()
+    for i in arrayUsernames:
+        print User.objects.get(username = i).email
+    print "It's working!"

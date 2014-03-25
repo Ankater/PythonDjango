@@ -8,6 +8,9 @@ from django import forms
 from django.http import HttpResponseRedirect
 from django import forms
 
+
+
+
 def index(request):
     if request.user.is_anonymous():
         print "---------------------Не авторизован---------------------------"
@@ -15,6 +18,6 @@ def index(request):
     else:
         #render(request, 'authentication/test1.html')
         print "---------------------Авторизован---------------------------"
-        t = loader.get_template('main/index.html')
-        c = RequestContext(request)
-        return HttpResponse(t.render(c))
+        template = loader.get_template('main/index.html')
+        page = RequestContext(request)
+        return HttpResponse(template.render(page))

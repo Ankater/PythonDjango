@@ -6,12 +6,18 @@ from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login
 from django import forms
 from django.http import HttpResponseRedirect
+from django.contrib.auth.models import User
+import time
 
 
 class authorizationForm(forms.Form):
     username = forms.CharField(label=u'Логин',widget=forms.TextInput(attrs ={'size': 30, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
     password = forms.CharField(label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести пароль'}))
 
+class registrationForm(forms.Form):
+    username = forms.CharField(label=u'Логин',widget=forms.TextInput(attrs ={'size': 30, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
+    password = forms.CharField(label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
+    email = forms.CharField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
 
 
 def authorization(request):
@@ -48,7 +54,21 @@ def registration(request):
         print "---------------------Не авторизован---------------------------"
         return HttpResponseRedirect('/authentication/')
     else:
-        print "---------------------Авторизован---------------------------"
-        t = loader.get_template('main/index.html')
-        c = RequestContext(request)
-        return HttpResponse(t.render(c))
+
+        if request.method == 'POST': # If the form has been submitted...
+            form = registrationForm(request.POST) # A form bound to the POST data
+            if form.is_valid(): # All validation rules pass
+                username = form.cleaned_data['username']
+                password = form.cleaned_data['password']
+                email = form.cleaned_data['email']
+
+                user = User.objects.create_user(username, email, password)
+                user.save()                
+                print "---------------------Пользователь создан---------------------------"
+                return render(request, 'authentication/congratulationRegistration.html')
+                time.sleep( 5 )
+                return HttpResponseRedirect('/')
+                print "!!!!!!!!!!!!!!!!!!!!!!!5!!!!!!!!!!!!!!!!!!!!!!"
+        else:
+            form = registrationForm() # An unbound form
+            return render(request, 'authentication/registration.html', {'form': form,})

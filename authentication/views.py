@@ -7,6 +7,8 @@ from django.contrib.auth import authenticate, login
 from django import forms
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
+from django.forms import widgets
+from django.forms.formsets import formset_factory
 import time
 
 
@@ -17,18 +19,15 @@ class authorizationForm(forms.Form):
 class registrationForm(forms.Form):
     username = forms.CharField(label=u'Логин',widget=forms.TextInput(attrs ={'size': 30, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
     password = forms.CharField(label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
-    email = forms.CharField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
+    email = forms.EmailField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
 
 class userControlForm(forms.Form):
-    userlist = User.objects.all()
-    userFormList = []
-    for i in userlist:
-        userInputList = []
-        username = forms.CharField(label=u'Логин',widget=forms.TextInput(attrs ={'size': 30, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
-        password = forms.CharField(label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
-        email = forms.CharField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
+    username = forms.CharField(label=u'Логин',widget=forms.TextInput(attrs ={'size': 30, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
+    password = forms.CharField(label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
+    email = forms.EmailField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
+    is_superuser = forms.BooleanField(widget=forms.CheckboxInput(attrs ={'title': 'superuser', 'class': 'form-control', 'id': 'checkboxSupeuser', 'placeholder': 'Суперпользователь'}))
 
-        
+
     
 
 def username_check(username):
@@ -98,7 +97,37 @@ def registration(request):
             return render(request, 'authentication/registration.html', {'form': form,})
 
 def userControl(request):
-    arrayUsernames =  User.objects.all()
-    for i in arrayUsernames:
-        print User.objects.get(username = i).email
-    print "It's working!"
+    if request.method == 'POST': # If the form has been submitted...
+            
+        data = {'username': 'user1',
+         'password': 'usernameHF89',
+         'email': 'foo@example.com',
+         'is_superuser': False}
+        f = userControlForm(data)
+        print f.is_valid()
+        formset = formset_factory(userControlForm) # A form bound to the POST data
+        form = formset(request.POST)
+        if form.is_valid(): # All validation rules pass
+            # Process the data in form.cleaned_data
+            # ...
+            print "1"
+        else:
+            print "0"
+            #print "error"
+    else:
+        userlist = User.objects.all()
+        userControlList = userControlForm
+        ArticleFormSet = formset_factory(userControlForm,extra=0)
+        data = []
+        i = 0
+        for user in userlist:
+            userdata = {}
+            userdata['username'] = user.username
+            userdata['email'] = user.email
+            userdata['is_superuser']=user.is_superuser
+            data.append(userdata)
+            i+=1
+
+        formset = ArticleFormSet(initial=data)
+
+        return render(request, 'authentication/usercontrol.html', {'userControlList': formset,})

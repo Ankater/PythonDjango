@@ -22,10 +22,10 @@ class registrationForm(forms.Form):
     email = forms.EmailField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
 
 class userControlForm(forms.Form):
-    username = forms.CharField(label=u'Логин',widget=forms.TextInput(attrs ={'size': 30, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
-    password = forms.CharField(label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
-    email = forms.EmailField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
-    is_superuser = forms.BooleanField(widget=forms.CheckboxInput(attrs ={'title': 'superuser', 'class': 'form-control', 'id': 'checkboxSupeuser', 'placeholder': 'Суперпользователь'}))
+    username = forms.CharField(label=u'Логин', widget=forms.TextInput(attrs ={'size': 30, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
+    password = forms.CharField(required=False, label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
+    email = forms.EmailField(label=u'email', widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
+    is_superuser = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs ={'title': 'superuser', 'class': 'form-control', 'id': 'checkboxSupeuser', 'placeholder': 'Суперпользователь'}))
 
 
     
@@ -98,21 +98,42 @@ def registration(request):
 
 def userControl(request):
     if request.method == 'POST': # If the form has been submitted...
-            
-        data = {'username': 'user1',
-         'password': 'usernameHF89',
-         'email': 'foo@example.com',
-         'is_superuser': False}
-        f = userControlForm(data)
-        print f.is_valid()
-        formset = formset_factory(userControlForm) # A form bound to the POST data
-        form = formset(request.POST)
+        userlist = User.objects.all()
+        
+        userId = User.objects.get(username=userlist[int(request.POST["fieldId"])]).id
+
+        username = request.POST["form-"+request.POST['fieldId']+"-username"]
+        password = request.POST["form-"+request.POST['fieldId']+"-password"]
+        email = request.POST["form-"+request.POST['fieldId']+"-email"]
+
+        try:
+            is_superuser = request.POST["form-"+request.POST['fieldId']+"-is_superuser"]
+        except KeyError:
+            is_superuser = "off"
+
+        print userId
+        print username
+        print password
+        print email
+        print is_superuser
+        dataPOST = {
+            "username":username,
+            "password":password,
+            "email":email,
+            "is_superuser":is_superuser
+        }
+        
+        form = userControlForm(dataPOST) # A form bound to the POST data
+#        print request.POST
+        #form = formset(request.POST)
+#        for i in request:
+#            print i
         if form.is_valid(): # All validation rules pass
             # Process the data in form.cleaned_data
             # ...
-            print "1"
+            print "Всё прошло нормально"
         else:
-            print "0"
+            print "Что-то неправильно"
             #print "error"
     else:
         userlist = User.objects.all()
@@ -120,11 +141,13 @@ def userControl(request):
         ArticleFormSet = formset_factory(userControlForm,extra=0)
         data = []
         i = 0
+        print userlist[0]
         for user in userlist:
             userdata = {}
             userdata['username'] = user.username
             userdata['email'] = user.email
             userdata['is_superuser']=user.is_superuser
+            userdata['id']=user.id
             data.append(userdata)
             i+=1
 

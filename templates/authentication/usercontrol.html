@@ -28,23 +28,25 @@
                 <div class="col-md-1"></div>
                 <div class="col-md-2"></div>
             </div>
+            {{ userControlList.management_form }}
             {%for user in userControlList%}
+            <form action="" method="post">{% csrf_token %}
                 <div class="row show-grid">
-                    <form action="" method="post">{% csrf_token %}
                         {%for field in user%}
                             <div class="col-md-2">
                                 {{field}}
                             </div>
                         {%endfor%}
                         <div class="col-md-2">
-                            <input type="submit" class="btn btn-primary" value="Сохранить">
+                            <input type="submit" class="btn btn-primary" name="saveButton" value="Сохранить">
+                            <input type="hidden" name="fieldId" value={{forloop.counter0}}>
                         </div>
                         <div class="col-md-2">
-                            <input type="button" class="btn btn-danger" value="Удалить Пользователя">
+                            <input type="button" class="btn btn-danger" name="delete" value="Удалить Пользователя">
                         </div>
-                    </form>
                 </div>
-            {%endfor%}                  
+            </form>
+            {%endfor%}  
         </div>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="{% static "js/jquery-1.11.0.min.js" %}"></script>

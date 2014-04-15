@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from django.shortcuts import render, render_to_response
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.template import RequestContext, loader
 from django.contrib.auth import authenticate, login
 from django import forms
@@ -10,6 +10,9 @@ from django.contrib.auth.models import User
 from django.forms import widgets
 from django.forms.formsets import formset_factory
 import time
+import json
+from django.core.mail import mail_admins
+from django.core.exceptions import ValidationError
 
 
 class authorizationForm(forms.Form):
@@ -22,11 +25,11 @@ class registrationForm(forms.Form):
     email = forms.EmailField(label=u'email',widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
 
 class userControlForm(forms.Form):
-    username = forms.CharField(label=u'Логин', widget=forms.TextInput(attrs ={'size': 30, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
-    password = forms.CharField(required=False, label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 30, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
-    email = forms.EmailField(label=u'email', widget=forms.TextInput(attrs ={'size': 30, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
+    username = forms.CharField(label=u'Логин', widget=forms.TextInput(attrs ={'size': 20, 'title': 'Логин', 'class': 'form-control', 'id': 'inputLogin', 'placeholder': 'Ввести логин'}))
+    password = forms.CharField(required=False, label=u'Пароль',widget=forms.PasswordInput(attrs ={'size': 20, 'title': 'Пароль', 'class': 'form-control', 'id': 'inputPassword', 'placeholder': 'Ввести пароль'}))
+    email = forms.EmailField(label=u'email', widget=forms.TextInput(attrs ={'size': 20, 'title': 'email', 'class': 'form-control', 'id': 'inputEmail', 'placeholder': 'Ввести email'}))
     is_superuser = forms.BooleanField(required=False, widget=forms.CheckboxInput(attrs ={'title': 'superuser', 'class': 'form-control', 'id': 'checkboxSupeuser', 'placeholder': 'Суперпользователь'}))
-
+    id =  forms.CharField(label=u'Логин', widget=forms.HiddenInput(attrs ={'class': 'userId', 'id': 'userId'}))
 
     
 
@@ -98,32 +101,9 @@ def registration(request):
 
 def userControl(request):
     if request.method == 'POST': # If the form has been submitted...
-        userlist = User.objects.all()
         
-        userId = User.objects.get(username=userlist[int(request.POST["fieldId"])]).id
-
-        username = request.POST["form-"+request.POST['fieldId']+"-username"]
-        password = request.POST["form-"+request.POST['fieldId']+"-password"]
-        email = request.POST["form-"+request.POST['fieldId']+"-email"]
-
-        try:
-            is_superuser = request.POST["form-"+request.POST['fieldId']+"-is_superuser"]
-        except KeyError:
-            is_superuser = "off"
-
-        print userId
-        print username
-        print password
-        print email
-        print is_superuser
-        dataPOST = {
-            "username":username,
-            "password":password,
-            "email":email,
-            "is_superuser":is_superuser
-        }
         
-        form = userControlForm(dataPOST) # A form bound to the POST data
+        form = userControlForm(request.POST) # A form bound to the POST data
 #        print request.POST
         #form = formset(request.POST)
 #        for i in request:
@@ -131,10 +111,15 @@ def userControl(request):
         if form.is_valid(): # All validation rules pass
             # Process the data in form.cleaned_data
             # ...
+            username = form.cleaned_data['username']
+            password = form.cleaned_data['password']
+            is_superuser = form.cleaned_data['is_superuser']
+            email = form.cleaned_data['email']
+            user_id = form.cleaned_data['id']
             print "Всё прошло нормально"
+            return render(request, 'authentication/usercontrol.html', {'userControlList': formset,})
         else:
-            print "Что-то неправильно"
-            #print "error"
+            print "0"
     else:
         userlist = User.objects.all()
         userControlList = userControlForm

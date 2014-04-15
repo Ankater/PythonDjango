@@ -17,6 +17,9 @@
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
+
+    
+
     </head>
     <body>
         <div class="container">
@@ -30,16 +33,25 @@
             </div>
             {{ userControlList.management_form }}
             {%for user in userControlList%}
-            <form action="" method="post">{% csrf_token %}
+            <form class="form-inline" role="form" action="" method="post">{% csrf_token %}
                 <div class="row show-grid">
-                        {%for field in user%}
+                        
                             <div class="col-md-2">
-                                {{field}}
+                                {{user.username}}
                             </div>
-                        {%endfor%}
-                        <div class="col-md-2">
-                            <input type="submit" class="btn btn-primary" name="saveButton" value="Сохранить">
-                            <input type="hidden" name="fieldId" value={{forloop.counter0}}>
+                            <div class="col-md-2">
+                                {{user.password}}
+                            </div>
+                            <div class="col-md-2">
+                                {{user.email}}
+                            </div>
+                            <div class="col-md-2">
+                                {{user.is_superuser}}
+                                
+                            </div>
+                            {{user.id}}
+                        <div class="col-md-1">
+                            <input id="ajaxsave" type="submit" class="btn btn-primary" name="saveButton" value="Сохранить">
                         </div>
                         <div class="col-md-2">
                             <input type="button" class="btn btn-danger" name="delete" value="Удалить Пользователя">
@@ -52,5 +64,32 @@
     <script src="{% static "js/jquery-1.11.0.min.js" %}"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="{% static "js/bootstrap.min.js" %}"></script>
+
+    <script type="text/javascript"
+        src="http://malsup.github.com/min/jquery.form.min.js">
+    </script>
+
+    <script type="text/javascript">
+        $('#ajaxsave').click(function(){
+            if($(this).closest($('[method=post]')).find('#checkboxSupeuser').is(':checked')){
+                is_superuser='on';
+            }else{
+                is_superuser='off'
+            }
+            $.post("",
+            {
+                csrfmiddlewaretoken:$(this).closest($('[method=post]')).find($('[name=csrfmiddlewaretoken]')).val(),
+                username:$(this).closest($('[method=post]')).find('#inputLogin').val(),
+                password:$(this).closest($('[method=post]')).find('#inputPassword').val(),
+                email:$(this).closest($('[method=post]')).find('#inputEmail').val(),
+                id:$(this).closest($('[method=post]')).find('#userId').val(),
+                is_superuser:is_superuser 
+            });
+            return false;
+        });
+
+
+    </script>
+
     </body>
 </html>

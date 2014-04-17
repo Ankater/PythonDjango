@@ -85,13 +85,17 @@ def registration(request):
                 if username_check(username):
                     print "-------------Пользователь с такми именем уже существует---------------"
                     form = registrationForm() # An unbound form
+    
                     return render(request, 'authentication/registration.html', {'form': form,})
+    
                 else:
-                    return username  
+                    print username  
                     user = User.objects.create_user(username, email, password)
+    
                     user.save()              
                     print "---------------------Пользователь создан---------------------------"
                     return render(request, 'authentication/congratulationRegistration.html')
+                   
                     time.sleep( 5 )
                     return HttpResponseRedirect('/')
                     print "!!!!!!!!!!!!!!!!!!!!!!!5!!!!!!!!!!!!!!!!!!!!!!"
@@ -102,31 +106,54 @@ def registration(request):
 def userControl(request):
     if request.method == 'POST': # If the form has been submitted...
         
-        
-        form = userControlForm(request.POST) # A form bound to the POST data
-#        print request.POST
-        #form = formset(request.POST)
-#        for i in request:
-#            print i
-        if form.is_valid(): # All validation rules pass
-            # Process the data in form.cleaned_data
-            # ...
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            is_superuser = form.cleaned_data['is_superuser']
-            email = form.cleaned_data['email']
-            user_id = form.cleaned_data['id']
-            print "Всё прошло нормально"
-            return render(request, 'authentication/usercontrol.html', {'userControlList': formset,})
-        else:
-            print "0"
+        if 'remove' in request.POST:
+
+            user_id = request.POST['id']
+            user = User.objects.get(id=user_id)
+            user.delete()
+            return HttpResponse('Пользователь удалён')
+        else:    
+            form = userControlForm(request.POST) # A form bound to the POST data
+    #        print request.POST
+            #form = formset(request.POST)
+    #        for i in request:
+    #            print i
+            if form.is_valid(): # All validation rules pass
+                # Process the data in form.cleaned_data
+                # ...
+                username = form.cleaned_data['username']
+                password = form.cleaned_data['password']
+                is_superuser = form.cleaned_data['is_superuser']
+                email = form.cleaned_data['email']
+                user_id = form.cleaned_data['id']
+                statusUsernameError=False
+                userList = User.objects.all()
+                for user in userList:
+                    if int(user_id) != user.id and username == user.username:
+                        statusUsernameError=True
+                if statusUsernameError == False:
+                    user.id = user_id
+                    user.username = username
+                    if password != '':  
+                        user.set_password(password)
+                    user.email = email
+                    user.is_superuser = is_superuser
+                    user.is_staff = is_superuser
+                    user.save()
+                    return HttpResponse('Данные пользователя успешно сохранены')
+                else:
+                    ValidationError(_('Другой пользователь уже имеет такое же имя пользователя'), code='invalid')
+
+                    
+
+                print "Всё прошло нормально"
+            else:
+                print "0"
     else:
         userlist = User.objects.all()
         userControlList = userControlForm
         ArticleFormSet = formset_factory(userControlForm,extra=0)
         data = []
-        i = 0
-        print userlist[0]
         for user in userlist:
             userdata = {}
             userdata['username'] = user.username
@@ -134,8 +161,10 @@ def userControl(request):
             userdata['is_superuser']=user.is_superuser
             userdata['id']=user.id
             data.append(userdata)
-            i+=1
-
+        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        for i in data:
+            print i
+        print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         formset = ArticleFormSet(initial=data)
 
         return render(request, 'authentication/usercontrol.html', {'userControlList': formset,})

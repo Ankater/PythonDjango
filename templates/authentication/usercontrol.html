@@ -51,10 +51,10 @@
                             </div>
                             {{user.id}}
                         <div class="col-md-1">
-                            <input id="ajaxsave" type="submit" class="btn btn-primary" name="saveButton" value="Сохранить">
+                            <input id="ajaxsave" type="submit" class="ajaxsave btn btn-primary" name="saveButton" value="Сохранить">
                         </div>
                         <div class="col-md-2">
-                            <input type="button" class="btn btn-danger" name="delete" value="Удалить Пользователя">
+                            <input type="button" class="btn btn-danger removeuser" name="delete" value="Удалить Пользователя">
                         </div>
                 </div>
             </form>
@@ -70,21 +70,81 @@
     </script>
 
     <script type="text/javascript">
-        $('#ajaxsave').click(function(){
-            if($(this).closest($('[method=post]')).find('#checkboxSupeuser').is(':checked')){
-                is_superuser='on';
-            }else{
-                is_superuser='off'
-            }
+        $('.removeuser').click(function(){
+            removeButton = this;
             $.post("",
             {
-                csrfmiddlewaretoken:$(this).closest($('[method=post]')).find($('[name=csrfmiddlewaretoken]')).val(),
-                username:$(this).closest($('[method=post]')).find('#inputLogin').val(),
-                password:$(this).closest($('[method=post]')).find('#inputPassword').val(),
-                email:$(this).closest($('[method=post]')).find('#inputEmail').val(),
-                id:$(this).closest($('[method=post]')).find('#userId').val(),
-                is_superuser:is_superuser 
+                csrfmiddlewaretoken:$(removeButton).closest($('[method=post]')).find($('[name=csrfmiddlewaretoken]')).val(),
+                id:$(removeButton).closest($('[method=post]')).find('#userId').val(),
+                remove:true
+            })
+            .success(function() { 
+                $('.container').append('<div class="alert alert-success">Пользователь удалён</div>');
+                console.log(removeButton);
+                console.log($(removeButton).closest('[method=post]'));
+                $(removeButton).closest('[method=post]').remove();
+                setTimeout(function(){
+                    $('.alert-success').remove();
+                }, 4000);
+                        //alert("Успешное выполнение"); 
+            })
+            .error(function() { 
+                $('.container').append('<div class="alert alert-danger">Произошла ошибка при обработке данных.</div>')
+                setTimeout(function(){
+                    $('.alert-danger').remove();
+                }, 4000);
             });
+        })
+
+        $('.ajaxsave').click(function(){
+            pressedButton = this;
+            username = $(this).closest($('[method=post]')).find('#inputLogin').val();
+            var reg = new RegExp("^[A-Za-z]{1,}[0-9]{0,}[A-Za-z]{0,}$");
+            if (reg.test(username)==false){
+                $(pressedButton).closest('[method=post]').find('.col-md-2').eq(0).addClass("has-error");
+                $('.container').append('<div class="alert alert-danger">Вы ввели неправильный логин</div>');
+                
+                setTimeout(function(){
+                    console.log($(pressedButton).closest('[method=post]').find('.col-md-2').eq(0))
+                    $(pressedButton).closest('[method=post]').find('.col-md-2').eq(0).removeClass("has-error");
+                    $('.alert-danger').remove();
+                }, 4000);
+            }else{  
+                email = $(pressedButton).closest($('[method=post]')).find('#inputEmail').val();
+                console.log(email)
+                var reg = new RegExp("^[a-z]{1,}[0-9]{0,}[a-z]{0,}@[a-z]{1,}\.[a-z]{2,}$");
+                if (reg.test(email)==false){
+                    $(pressedButton).closest('[method=post]').find('.col-md-2').eq(2).addClass("has-error");
+                    $('.container').append('<div class="alert alert-danger">Неправильный формат email</div>');
+                    setTimeout(function(){
+                        $(pressedButton).closest('[method=post]').find('.col-md-2').eq(2).removeClass("has-error");
+                        $('.alert-danger').remove();
+                    }, 4000);
+                }else{
+                    var changeUser = $.post("",
+                    {
+                        csrfmiddlewaretoken:$(pressedButton).closest($('[method=post]')).find($('[name=csrfmiddlewaretoken]')).val(),
+                        username:username,
+                        password:$(pressedButton).closest($('[method=post]')).find('#inputPassword').val(),
+                        email:email,
+                        id:$(pressedButton).closest($('[method=post]')).find('#userId').val(),
+                        is_superuser:$(pressedButton).closest($('[method=post]')).find('#checkboxSupeuser').is(':checked')
+                    })
+                    .success(function() { 
+                        $('.container').append('<div class="alert alert-success">Данные пользователя успешно сохранены</div>');
+                        setTimeout(function(){
+                            $('.alert-success').remove();
+                        }, 4000);
+                        //alert("Успешное выполнение"); 
+                    })
+                    .error(function() { 
+                        $('.container').append('<div class="alert alert-danger">Произошла ошибка при обработке данных. Пожалуйста, проверьте введённые данные.</div>')
+                        setTimeout(function(){
+                            $('.alert-danger').remove();
+                        }, 4000);
+                    });
+                }
+            }
             return false;
         });
 
